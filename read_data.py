@@ -25,10 +25,7 @@ class read_data:
         for raw_fname in self.raw_files:
             user = Path(raw_fname).stem.split('-')[0]
             uname.append(user)
-            # if user != 'u16':
-            #     continue
             excel_fname = [string for string in self.excel_files if user in string][0]
-            # print(raw_fname, excel_fname)
             merged = self.merge(raw_fname, excel_fname)
             ret.append(merged)
         return ret, uname
@@ -82,7 +79,7 @@ class read_data:
         for idx in range(len(feedback_data)):
             # pdb.set_trace()
             while idx2 < len(raw_data) and feedback_data[idx][0] >= raw_data[idx2][0] :
-                # 0: index, 1: action, 2: visualization, 3: high_level_state, 4: reward 
+                # 0: index, 1: action, 2: visualization, 3: high_level_state, 4: reward
                 if(feedback_data[idx][1] == 'observation'):
                     reward = 0.1
                 else:
@@ -94,7 +91,7 @@ class read_data:
                 holder[idx2 - 1][4] = 1
             idx += 1
         # for items in holder:
-        #     print(items) 
+        #     print(items)
         return holder
 
 if __name__ == "__main__":

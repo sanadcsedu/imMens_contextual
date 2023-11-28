@@ -7,9 +7,9 @@ import json
 from read_data import read_data
 from pathlib import Path
 import glob
-from tqdm import tqdm 
-import os 
-import pdb 
+from tqdm import tqdm
+import os
+import pdb
 import random
 # import matplotlib.pyplot as plt
 import itertools
@@ -18,8 +18,8 @@ import numpy as np
 class contextual_bandit:
     def __init__(self):
         # self.train_data = []
-        pass 
-    
+        pass
+
     # This function modifies (context, action, cost, probability) to VW friendly format
     def to_vw_example_format(self, context, actions, cb_label=None):
         if cb_label is not None:
@@ -47,7 +47,7 @@ class contextual_bandit:
             sum_prob += prob
             if sum_prob > draw:
                 return index, prob
-    
+
     def get_action(self, vw, context, actions):
         vw_text_example = self.to_vw_example_format(context, actions)
         pmf = vw.predict(vw_text_example)
@@ -55,15 +55,15 @@ class contextual_bandit:
         return actions[chosen_action_index], prob
 
     def run_train(self, vw, data, threshold, actions, do_learn=True):
-        epoch = 20
+        epoch = 10
         #training phase
         ctr = []
         for _ in (range(epoch)):
-            num_iterations = int(len(data) * threshold) 
+            num_iterations = int(len(data) * threshold)
             start_counter = 0
             end_counter = start_counter + num_iterations
             for i in range(start_counter, end_counter):
-                # 0: index, 1: action, 2: visualization, 3: high_level_state, 4: reward 
+                # 0: index, 1: action, 2: visualization, 3: high_level_state, 4: reward
                 # 1. in each simulation choose a user
                 raw_action = data[i][1]
                 # 2. choose time of day for a given user
@@ -84,7 +84,7 @@ class contextual_bandit:
 
                 # 4. Get cost of the action we chose
                 # cost = cost_function(context, action)
-                
+
                 if do_learn:
                     # 5. Inform VW of what happened so we can learn from it
                     # vw_format = vw.parse(
@@ -102,14 +102,14 @@ class contextual_bandit:
     def run_test(self, vw, data, threshold, actions, do_learn=True):
         #testing phase
         ctr = []
-        start_counter = int(len(data) * threshold) 
+        start_counter = int(len(data) * threshold)
         end_counter = len(data)
         for i in range(start_counter, end_counter):
-            
+
             raw_action = data[i][1]
-            
+
             high_level_state = data[i][3]
-            
+
             # context = {"raw_action": raw_action, "state": high_level_state}
             context = {"raw_action": raw_action}
 
@@ -119,18 +119,18 @@ class contextual_bandit:
                 ctr.append(1)
             else:
                 ctr.append(0)
-                
+
             if do_learn:
                 vw_format = vw.parse(
                     self.to_vw_example_format(context, actions, (data[i][2], -data[i][4], prob)),
                     vowpalwabbit.LabelType.CONTEXTUAL_BANDIT,)
                 vw.learn(vw_format)
         return np.mean(ctr)
-    
+
 def run_cb(data):
     threshold = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
-    actions = ['bar-4', 'bar-2', 'scatterplot-0-1', 'hist-3']
-    
+    # actions = ['bar-4', 'bar-2', 'scatterplot-0-1', 'hist-3']
+    actions = ['bar-5', 'hist-2', 'hist-3', 'hist-4', 'geo-0-1']
     accuracy = []
     for thres in threshold:
         cb = contextual_bandit()
@@ -147,12 +147,13 @@ def run_cb(data):
                 _max = ctr
                 best_vw_model = vw
         ctr = cb.run_train(best_vw_model, data, thres, actions)
-        accuracy.append(_max)    
+        accuracy.append(_max)
         # pdb.set_trace()
     return accuracy
 
-if __name__ == "__main__":     
-    env = read_data(['bar-4', 'bar-2', 'scatterplot-0-1', 'hist-3'])
+if __name__ == "__main__":
+    # env = read_data(['bar-4', 'bar-2', 'scatterplot-0-1', 'hist-3'])
+    env = read_data(['bar-5', 'hist-2', 'hist-3', 'hist-4', 'geo-0-1'])
     accu = np.zeros(9, dtype=float)
     for raw_fname in env.raw_files:
         user = Path(raw_fname).stem.split('-')[0]
